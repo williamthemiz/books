@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 let Schema = mongoose.Schema;
+mongoose.Promise = global.Promise;
 
 //definiendo el esquema de libro
 
