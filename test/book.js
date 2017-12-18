@@ -26,7 +26,7 @@ describe('Books',() => {
 
 // testing GET /books
 
-describe('/GET books',() =>{
+describe('GET /books',() =>{
     it('SHOULD get all the books',(done) => {
         chai.request(server)
             .get('/books')
@@ -91,7 +91,7 @@ describe('POST /books',() =>{
 
 //testing GET /books/:id
 
-describe('GET books/:id',() =>{
+describe('GET /books/:id',() =>{
     it('SHOULD get the book with the specified id',(done) => {
         let book = new Book(
         {
@@ -116,6 +116,59 @@ describe('GET books/:id',() =>{
                     done();
                 });
         })
+    });
+});
+
+describe('PUT /books/:id',() => {
+    it('SHOULD update the book given the id',(done) => {
+        let book = new Book(
+            {
+                title: "The Chronicles of Narnia", 
+                    author: "C.S. Lewis", 
+                    year: 1948, 
+                    pages: 778
+            });
+
+        book.save((err,book) => {
+            chai.request(server).put('/books/'+book.id)
+            .send({
+                    title: "The Chronicles of Narnia", 
+                    author: "C.S. Lewis", 
+                    year: 1950, 
+                    pages: 778
+                })
+            .end((err,res) =>{
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('message').equal('Libro actualizado');
+                res.body.book.should.have.property('year').equal(1950);
+                done();
+            });
+        });
+    });
+});
+
+describe('DELETE /books/:id',() => {
+    it('SHOULD delete the book given the id',() => {
+        let book = new Book(
+            {
+                title: "The Chronicles of Narnia", 
+                    author: "C.S. Lewis", 
+                    year: 1948, 
+                    pages: 778
+            });
+
+        book.save((err,book) =>{
+            chai.request(server)
+                .delete('/books/'+book.id)
+                .end((err,res) => {
+                    res.should.have.status(200);
+                    res.body.should.be.a('object');
+                    res.body.should.have.property('message'.equal("Libro eliminado!"));
+                    res.body.should.have.property('ok').equal(1);
+                    res.body.should.have.property('n').equal(1);
+                });
+        });
     });
 });
 
