@@ -1,8 +1,26 @@
 process.env.NODE_ENV = 'test';
 
 const mongoose  = require('mongoose');
+const factory   = require('factory-girl').factory;
 let Book        = require('../controllers/models/book');
 
+
+//probando factory girl
+
+factory.define('book',Book,{
+        title:      factory.sequence('book.title',n =>`Libro-${n}`),
+        author:     factory.chance('name'),
+        year:       factory.chance('year',{min: 1500, max: 2017}),
+        pages:      factory.chance('natural',{min:1,max:1000}),
+        createdAt:  factory.chance('date',{year:2017})
+});
+
+
+/*
+factory.buildMany('book',5).then(books =>{
+    console.log(books);
+});
+*/
 
 //dependencias para el testing
 
@@ -16,7 +34,7 @@ chai.use(chaiHttp);
 //vaciar registros de DB de prueba antes de iniciar tests 
 
 describe('Books',() => {
-    beforeEach((done) => {
+    before((done) => {
         Book.remove({},(err) => {
             done()
         });
@@ -93,14 +111,7 @@ describe('POST /books',() =>{
 
 describe('GET /books/:id',() =>{
     it('SHOULD get the book with the specified id',(done) => {
-        let book = new Book(
-        {
-            title   : 'Harry Potter',
-            author  : 'JK Rowling',
-            year    : 1954,
-            pages   : 600
-        });
-
+        factory.build('book').then(book =>{
         book.save((err,book) =>{
             chai.request(server)
                 .get('/books/'+book.id)
@@ -115,51 +126,51 @@ describe('GET /books/:id',() =>{
                     res.body.should.have.property('_id').eql(book.id);
                     done();
                 });
-        })
+            });
+        });
+
     });
 });
 
 describe('PUT /books/:id',() => {
     it('SHOULD update the book given the id',(done) => {
-        let book = new Book(
+        /*let book = new Book(
             {
                 title: "The Chronicles of Narnia", 
                     author: "C.S. Lewis", 
                     year: 1948, 
                     pages: 778
             });
+        */
 
-        book.save((err,book) => {
-            chai.request(server).put('/books/'+book.id)
-            .send({
-                    title: "The Chronicles of Narnia", 
-                    author: "C.S. Lewis", 
-                    year: 1950, 
-                    pages: 778
-                })
-            .end((err,res) =>{
-                res.should.have.status(200);
-                res.body.should.be.a('object');
-                res.body.should.have.property('message').equal('Libro actualizado');
-                res.body.book.should.have.property('year').equal(1950);
-                done();
+        factory.build('book').then(book => {
+             
+            book.save((err,book) => {
+                chai.request(server).put('/books/'+book.id)
+                .send({
+                        title: "The Chronicles of Narnia", 
+                        author: "C.S. Lewis", 
+                        year: 1950, 
+                        pages: 778
+                    })
+                .end((err,res) =>{
+                    res.should.have.status(200);
+                    res.body.should.be.a('object');
+                    res.body.should.have.property('message').equal('Libro actualizado');
+                    res.body.book.should.have.property('year').equal(1950);
+                    done();
+                });
             });
         });
+       
     });
 });
 
 describe('DELETE /books/:id',() => {
     it('SHOULD delete the book given the id',() => {
-        let book = new Book(
-            {
-                title: "The Chronicles of Narnia", 
-                    author: "C.S. Lewis", 
-                    year: 1948, 
-                    pages: 778
-            });
-
+       factory.build('book').then(book =>{
         book.save((err,book) =>{
-            chai.request(server)
+                chai.request(server)
                 .delete('/books/'+book.id)
                 .end((err,res) => {
                     res.should.have.status(200);
@@ -168,7 +179,10 @@ describe('DELETE /books/:id',() => {
                     res.body.should.have.property('ok').equal(1);
                     res.body.should.have.property('n').equal(1);
                 });
+            });
         });
+
+       
     });
 });
 
